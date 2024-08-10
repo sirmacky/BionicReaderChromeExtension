@@ -1,15 +1,11 @@
 const toggleSwitch = document.getElementById("toggleSwitch");
 const focusLength = document.getElementById("focusLength");
 const focusLengthValue = document.getElementById("focusLengthValue");
-const darkModeToggle = document.getElementById("darkModeToggle");
-const darkModeToggle2 = document.getElementById("darkModeToggle2");
 
-chrome.storage.sync.get(["isEnabled", "focusLength", "isDarkMode", "isDarkMode2"], ({ isEnabled, focusLength: savedFocusLength, isDarkMode, isDarkMode2 }) => {
+chrome.storage.sync.get(["isEnabled", "focusLength"], ({ isEnabled, focusLength: savedFocusLength }) => {
   toggleSwitch.checked = isEnabled;
   focusLength.value = savedFocusLength || 2;
   focusLengthValue.textContent = focusLength.value;
-  darkModeToggle.checked = isDarkMode;
-  darkModeToggle2.checked = isDarkMode2;
 });
 
 toggleSwitch.addEventListener("change", () => {
@@ -25,28 +21,10 @@ toggleSwitch.addEventListener("change", () => {
 
 focusLength.addEventListener("input", () => {
   const value = focusLength.value;
-  focusLengthValue.textContent = value;
+  focusLengthValue.textContent = value / 100.0;
   chrome.storage.sync.set({ focusLength: value });
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     chrome.tabs.sendMessage(tabs[0].id, { action: "updateFocusLength", focusLength: value });
-  });
-});
-
-darkModeToggle.addEventListener("change", () => {
-  const isDarkMode = darkModeToggle.checked;
-  chrome.storage.sync.set({ isDarkMode });
-
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDarkMode", isDarkMode });
-  });
-});
-
-darkModeToggle2.addEventListener("change", () => {
-  const isDarkMode2 = darkModeToggle2.checked;
-  chrome.storage.sync.set({ isDarkMode2 });
-
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { action: "toggleDarkMode2", isDarkMode2 });
   });
 });
