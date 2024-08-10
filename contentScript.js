@@ -110,7 +110,7 @@ function calcualteBionicLength(word) {
 
 function convertToBionic(word) {
   const bionicLength = calcualteBionicLength(word);
-  if (length == 0)
+  if (bionicLength == 0)
     return word;
   let bionicWord = '';
 
