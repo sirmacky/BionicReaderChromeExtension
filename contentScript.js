@@ -5,42 +5,39 @@ String.prototype.insert = function(index, string) {
   return string + this;
 };
 
-function injectCSS() {
-
-  const styles = `
-    .bionic-primary {
-      font-weight: 800;
-    }
-
-    .bionic-secondary {
-      font-weight: 700;
-    }
-  `;
-
-  const styleElement = document.createElement('style');
-  styleElement.innerHTML = styles;
-  document.head.appendChild(styleElement);
+Element.prototype.remove = function() {
+  this.parentElement.removeChild(this);
 }
 
+function PushStyle() {
+  const linkElement = document.createElement('link');
+  linkElement.href = chrome.runtime.getURL('bionicstyles.css');
+  linkElement.id   = 'link-bionicstyles';
+  linkElement.rel  = 'stylesheet';
+  linkElement.type = `text/css`;
+  document.head.appendChild(linkElement);
+}
 
-let isEnabled = false;
+function PopStyle() {
+  document.getElementById("link-bionicstyles").remove();
+}
+
+let isEnabled = null;
 let focusLength = 0.33;
 
 chrome.storage.sync.get(["isEnabled", "focusLength"], ({ isEnabled: savedIsEnabled, focusLength: savedFocusLength }) => {
-  isEnabled = savedIsEnabled;
   focusLength = (savedFocusLength || 33) / 100.0
-  if (isEnabled) {
+  if (savedIsEnabled) {
     activateBionicReading();
+  } else {
+    isEnabled = false;
   }
-  
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "activateBionicReading") {
-    isEnabled = true;
     activateBionicReading();
   } else if (request.action === "deactivateBionicReading") {
-    isEnabled = false;
     deactivateBionicReading();
   } else if (request.action === "updateFocusLength") {
       focusLength = parseFloat(request.focusLength, focusLength) / 100;
@@ -51,27 +48,38 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 function activateBionicReading() {
-  console.log("Applying bionic reading");
-  injectCSS();
-  let textNodes = getTextNodes(document.body);
-  textNodes.forEach((node) => {
-    let bionicText = applyBionicReading(node);
-    let newNode = document.createElement("span");
-    newNode.innerHTML = bionicText;
-    node.parentNode.replaceChild(newNode, node);
-  });
+  if (isEnabled === true)
+    return;
+  isEnabled = true;
+  PushStyle();
+  updateBionicReading();
 }
 
 function deactivateBionicReading() {
+  if (isEnabled === false)
+    return;
+  isEnabled = false;
+  PopStyle();
+  updateBionicReading();
+}
+
+
+function updateBionicReading() {
+
   let bionicSpans = document.querySelectorAll(".bionic-primary, .bionic-secondary");
   bionicSpans.forEach((span) => {
     span.outerHTML = span.textContent;
   });
-}
 
-function updateBionicReading() {
-  deactivateBionicReading();
-  activateBionicReading();
+  if (isEnabled){
+    let textNodes = getTextNodes(document.body);
+    textNodes.forEach((node) => {
+      let bionicText = applyBionicReading(node);
+      let newNode = document.createElement("span");
+      newNode.innerHTML = bionicText;
+      node.parentNode.replaceChild(newNode, node);
+    });
+  }
 }
 
 function getTextNodes(element) {

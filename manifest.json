@@ -6,7 +6,6 @@
   "icons": {
     "48": "icon.png"
   },
-  "permissions": ["activeTab", "storage"],
   "action": {
     "default_icon": "icon.png",
     "default_popup": "popup.html"
@@ -14,8 +13,10 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "css": ["bionicstyles.css"],
       "js": ["contentScript.js"]
     }
   ],
+  "permissions": ["activeTab", "storage"],
   "host_permissions": ["*://*/*"]
 }
